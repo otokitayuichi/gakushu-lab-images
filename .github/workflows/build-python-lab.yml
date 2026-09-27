@@ -1,0 +1,56 @@
+# 仕様コメント: Pythonラボイメージのビルドとプッシュ
+# 目的: python/ フォルダのDockerfileからイメージをビルドし、GitHub Container Registryへプッシュする
+# 起動条件: python/ 配下の変更をmainへpushした時、またはActions画面から手動実行した時
+# 出力: ghcr.io/<リポジトリ所有者(小文字)>/python-lab:<タグ>
+#       タグは手動実行時の入力値（既定: v6）。push時は v6 を使用
+# 認証: GitHub Actions標準のGITHUB_TOKEN（packages: write 権限）を使用。個別の認証情報は不要
+name: build-python-lab
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "イメージのタグ"
+        required: true
+        default: "v6"
+  push:
+    branches: [main]
+    paths:
+      - "python/**"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリの取得
+        uses: actions/checkout@v4
+
+      - name: イメージ名の決定（GHCRは小文字のみ使用可能）
+        id: meta
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then TAG="v6"; fi
+          echo "image=ghcr.io/${OWNER}/python-lab:${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub Container Registryへログイン
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ビルドとプッシュ
+        uses: docker/build-push-action@v6
+        with:
+          context: ./python
+          push: true
+          tags: ${{ steps.meta.outputs.image }}
+
+      - name: 結果表示
+        run: |
+          echo "プッシュ完了 ${{ steps.meta.outputs.image }}"
