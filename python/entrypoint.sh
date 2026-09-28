@@ -1,7 +1,9 @@
 #!/bin/bash
-# 仕様コメント: ラボコンテナの起動スクリプト（v6 / Azure Container Apps用）
+# 仕様コメント: ラボコンテナの起動スクリプト（v8 / Azure Container Apps用）
 # 役割:
-#   1. fork bomb対策としてプロセス数上限(ulimit)を設定
+#   1. fork bomb対策としてプロセス数上限(ulimit -u)を設定
+#      - 上限はスレッドも数に含むため、code-server等のスレッドだけで約126に達する（v7で実測）
+#      - 既定値は512。環境変数 LAB_NPROC_LIMIT で変更可能（イメージを作り直さずに調整するため）
 #   2. 教材データのコピー（Lab Controllerが発行する短命SAS付きURLを環境変数で受け取る）
 #      - LAB_MATERIAL_URL     : URLをそのまま渡す場合
 #      - LAB_MATERIAL_URL_B64 : URLをBase64で渡す場合（Windowsのaz CLIで & を含むURLを安全に渡すため）
@@ -15,7 +17,7 @@
 set -uo pipefail
 
 # ---- 1. プロセス数上限（fork bomb対策） ----
-ulimit -u 128
+ulimit -u "${LAB_NPROC_LIMIT:-512}"
 
 # ---- 2. 教材データのコピー（任意） ----
 MATERIAL_URL="${LAB_MATERIAL_URL:-}"
