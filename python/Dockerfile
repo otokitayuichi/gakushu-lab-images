@@ -1,9 +1,10 @@
-# 仕様コメント: Python基礎ラボ用イメージ（v6 / Azure Container Apps用）
+# 仕様コメント: Python基礎ラボ用イメージ（v7 / Azure Container Apps用）
 # 目的: code-server(OSS版VS Code) + Python3 実行環境
 # 実行基盤: Azure Container Apps（従量課金プラン、HTTPSの入口はContainer Apps標準機能を使用）
 # イメージ保管: GitHub Container Registry（公開）。ビルドはGitHub Actionsで実施
 # code-server固定理由: 日本語言語パック(1.131系)と内蔵VS Code(4.131.0=1.131.0)のバージョンを一致させるため
 # v5からの変更: 状況確認用サーバー(8081)を廃止。Container AppsのHTTPの入口は1ポートのみ転送のため
+# v6からの変更: ターミナルのプロンプトを短縮（Container Appsの長いコンテナ名を表示しない）
 # ベース: Ubuntu 22.04 LTS
 
 FROM ubuntu:22.04
@@ -48,6 +49,10 @@ USER student
 WORKDIR /home/student
 
 RUN mkdir -p /home/student/workspace
+
+# ターミナルのプロンプトを短縮（例: student@lab:~/workspace$）
+# ホスト名にはContainer Appsの長いコンテナ名が入るため、表示しない
+RUN printf '\n# 受講者向けにプロンプトを短縮（コンテナ名を表示しない）\nPS1='"'"'\\[\\e[32m\\]\\u@lab\\[\\e[0m\\]:\\[\\e[34m\\]\\w\\[\\e[0m\\]\\$ '"'"'\n' >> /home/student/.bashrc
 
 # gitのデフォルトID（教材でgit commitを使わせても落ちないようにする仮設定）
 RUN git config --global user.name "student" \

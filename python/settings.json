@@ -7,6 +7,5 @@
   "telemetry.telemetryLevel": "off",
   "update.mode": "none",
   "security.workspace.trust.enabled": false,
-  "keyboard.dispatch": "keyCode",
-  "python.defaultInterpreterPath": "/usr/bin/python3"
+  "keyboard.dispatch": "keyCode"
 }
